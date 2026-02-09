@@ -10,7 +10,7 @@ import {
   type FastifyTRPCPluginOptions,
 } from "@trpc/server/adapters/fastify";
 import { fromNodeHeaders, toNodeHandler } from "better-auth/node";
-import fastify from "fastify";
+import fastify, { type FastifyError } from "fastify";
 
 import { auth } from "./auth.js";
 import { logAudit } from "./lib/audit.js";
@@ -21,6 +21,17 @@ import { createContext } from "./trpc.js";
 const server = fastify({ logger: true });
 
 const isDev = process.env.NODE_ENV !== "production";
+
+// Sanitize error responses — never leak stack traces in production
+server.setErrorHandler((error: FastifyError, _req, reply) => {
+  server.log.error(error);
+  const statusCode = error.statusCode ?? 500;
+  reply.status(statusCode).send({
+    statusCode,
+    error: error.name,
+    message: isDev ? error.message : statusCode >= 500 ? "Internal Server Error" : error.message,
+  });
+});
 
 // 1. Helmet — security headers
 await server.register(helmet, {

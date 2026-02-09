@@ -20,8 +20,19 @@ export async function createContext({ req, res }: CreateFastifyContextOptions) {
 
 export type Context = Awaited<ReturnType<typeof createContext>>;
 
+const isDev = process.env.NODE_ENV !== "production";
+
 const t = initTRPC.context<Context>().create({
   transformer: superjson,
+  errorFormatter({ shape }) {
+    return {
+      ...shape,
+      data: {
+        ...shape.data,
+        stack: isDev ? shape.data.stack : undefined,
+      },
+    };
+  },
 });
 
 export const router = t.router;
