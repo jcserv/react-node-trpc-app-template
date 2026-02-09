@@ -1,4 +1,4 @@
-import { existsSync } from "node:fs";
+import { createReadStream, existsSync, statSync } from "node:fs";
 import path from "node:path";
 
 import cors from "@fastify/cors";
@@ -9,11 +9,12 @@ import {
   fastifyTRPCPlugin,
   type FastifyTRPCPluginOptions,
 } from "@trpc/server/adapters/fastify";
-import { toNodeHandler } from "better-auth/node";
+import { fromNodeHeaders, toNodeHandler } from "better-auth/node";
 import fastify from "fastify";
 
 import { auth } from "./auth.js";
 import { logAudit } from "./lib/audit.js";
+import { seedAdmin } from "./lib/seed-admin.js";
 import { type AppRouter, appRouter } from "./router/index.js";
 import { createContext } from "./trpc.js";
 
@@ -92,6 +93,8 @@ await server.register(async (instance) => {
         "/sign-in/email",
         "/sign-up/email",
         "/sign-out",
+        "/sign-in/oauth2",
+        "/callback/oauth2",
       ].some((p) => url.includes(p));
 
       await authHandler(req.raw, reply.raw);
@@ -132,7 +135,39 @@ server.get("/health", async () => {
   return { status: "ok" };
 });
 
-// 7. Static file serving — serve built UI assets in production
+// 7. Admin backup endpoint — streams SQLite DB file
+server.get("/api/admin/backup", async (req, reply) => {
+  const session = await auth.api.getSession({
+    headers: fromNodeHeaders(req.raw.headers),
+  });
+
+  if (!session?.user) {
+    return reply.status(401).send({ error: "Not authenticated" });
+  }
+
+  const role = (session.user as Record<string, unknown>).role as
+    | string
+    | undefined;
+  if (role !== "admin") {
+    return reply.status(403).send({ error: "Admin access required" });
+  }
+
+  const dbPath = path.resolve(process.env.DATABASE_PATH || "sqlite.db");
+  if (!existsSync(dbPath)) {
+    return reply.status(404).send({ error: "Database file not found" });
+  }
+
+  const stat = statSync(dbPath);
+  const filename = `backup-${new Date().toISOString().replace(/[:.]/g, "-")}.db`;
+
+  reply.header("Content-Type", "application/octet-stream");
+  reply.header("Content-Disposition", `attachment; filename="${filename}"`);
+  reply.header("Content-Length", stat.size);
+
+  return reply.send(createReadStream(dbPath));
+});
+
+// 8. Static file serving — serve built UI assets in production
 const uiDistPath = path.resolve(process.env.UI_DIST_PATH || "./ui/dist");
 if (existsSync(uiDistPath)) {
   await server.register(fastifyStatic, {
@@ -145,6 +180,9 @@ if (existsSync(uiDistPath)) {
     return reply.sendFile("index.html");
   });
 }
+
+// Seed admin user on first startup
+await seedAdmin();
 
 const port = Number(process.env.PORT) || 3000;
 

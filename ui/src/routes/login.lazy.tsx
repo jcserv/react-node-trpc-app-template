@@ -13,6 +13,7 @@ import {
   PasswordInput,
 } from "@/components/ui";
 import { signIn } from "@/lib/auth-client";
+import { trpc } from "@/lib/trpc";
 
 export const Route = createLazyFileRoute("/login")({
   component: LoginPage,
@@ -24,6 +25,8 @@ function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const { data: providers } = trpc.authProviders.list.useQuery();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,6 +43,18 @@ function LoginPage() {
       setError("An unexpected error occurred");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleOAuthSignIn = async (providerId: string) => {
+    setError("");
+    try {
+      await signIn.oauth2({
+        providerId,
+        callbackURL: "/notes",
+      });
+    } catch {
+      setError("OAuth sign in failed");
     }
   };
 
@@ -85,6 +100,34 @@ function LoginPage() {
               </Link>
             </p>
           </form>
+
+          {providers && providers.length > 0 && (
+            <>
+              <div className="relative my-4">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-white px-2 text-muted-foreground dark:bg-zinc-950">
+                    Or continue with
+                  </span>
+                </div>
+              </div>
+              <div className="space-y-2">
+                {providers.map((p) => (
+                  <Button
+                    key={p.providerId}
+                    type="button"
+                    variant="outline"
+                    className="w-full capitalize"
+                    onClick={() => handleOAuthSignIn(p.providerId)}
+                  >
+                    {p.providerId}
+                  </Button>
+                ))}
+              </div>
+            </>
+          )}
         </CardContent>
       </Card>
     </section>

@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { StickyNote } from "lucide-react";
+import { Notebook, Shield, StickyNote } from "lucide-react";
 
 import { ModeToggle } from "@/components";
 import { Button } from "@/components/ui";
@@ -7,6 +7,9 @@ import { signOut, useSession } from "@/lib/auth-client";
 
 export const Header: React.FC = () => {
   const { data: session } = useSession();
+
+  const isAdmin =
+    session?.user && (session.user as Record<string, unknown>).role === "admin";
 
   return (
     <header className="flex items-center justify-between m-4">
@@ -21,8 +24,18 @@ export const Header: React.FC = () => {
               to="/notes"
               className="inline-flex items-center hover:underline text-sm"
             >
-              My Notes
+              <Notebook className="h-4 w-4" />
+              Notes
             </Link>
+            {isAdmin && (
+              <Link
+                to="/admin"
+                className="inline-flex items-center gap-1 hover:underline text-sm"
+              >
+                <Shield className="h-4 w-4" />
+                Admin
+              </Link>
+            )}
             <span className="text-sm text-muted-foreground">
               {session.user.email}
             </span>

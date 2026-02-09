@@ -15,6 +15,13 @@
       "when": 1770675578326,
       "tag": "0001_parallel_dark_beast",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1770679567302,
+      "tag": "0002_clear_overlord",
+      "breakpoints": true
     }
   ]
 }

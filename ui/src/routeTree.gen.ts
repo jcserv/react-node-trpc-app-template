@@ -11,12 +11,18 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 import { Route as rootRouteImport } from "./routes/__root";
+import { Route as AdminRouteImport } from "./routes/admin";
 
 const SignupLazyRouteImport = createFileRoute("/signup")();
 const NotesLazyRouteImport = createFileRoute("/notes")();
 const LoginLazyRouteImport = createFileRoute("/login")();
 const AboutLazyRouteImport = createFileRoute("/about")();
 const IndexLazyRouteImport = createFileRoute("/")();
+const AdminIndexLazyRouteImport = createFileRoute("/admin/")();
+const AdminUsersLazyRouteImport = createFileRoute("/admin/users")();
+const AdminSettingsLazyRouteImport = createFileRoute("/admin/settings")();
+const AdminBackupLazyRouteImport = createFileRoute("/admin/backup")();
+const AdminAuditLazyRouteImport = createFileRoute("/admin/audit")();
 
 const SignupLazyRoute = SignupLazyRouteImport.update({
   id: "/signup",
@@ -38,18 +44,56 @@ const AboutLazyRoute = AboutLazyRouteImport.update({
   path: "/about",
   getParentRoute: () => rootRouteImport,
 } as any).lazy(() => import("./routes/about.lazy").then((d) => d.Route));
+const AdminRoute = AdminRouteImport.update({
+  id: "/admin",
+  path: "/admin",
+  getParentRoute: () => rootRouteImport,
+} as any);
 const IndexLazyRoute = IndexLazyRouteImport.update({
   id: "/",
   path: "/",
   getParentRoute: () => rootRouteImport,
 } as any).lazy(() => import("./routes/index.lazy").then((d) => d.Route));
+const AdminIndexLazyRoute = AdminIndexLazyRouteImport.update({
+  id: "/",
+  path: "/",
+  getParentRoute: () => AdminRoute,
+} as any).lazy(() => import("./routes/admin/index.lazy").then((d) => d.Route));
+const AdminUsersLazyRoute = AdminUsersLazyRouteImport.update({
+  id: "/users",
+  path: "/users",
+  getParentRoute: () => AdminRoute,
+} as any).lazy(() => import("./routes/admin/users.lazy").then((d) => d.Route));
+const AdminSettingsLazyRoute = AdminSettingsLazyRouteImport.update({
+  id: "/settings",
+  path: "/settings",
+  getParentRoute: () => AdminRoute,
+} as any).lazy(() =>
+  import("./routes/admin/settings.lazy").then((d) => d.Route),
+);
+const AdminBackupLazyRoute = AdminBackupLazyRouteImport.update({
+  id: "/backup",
+  path: "/backup",
+  getParentRoute: () => AdminRoute,
+} as any).lazy(() => import("./routes/admin/backup.lazy").then((d) => d.Route));
+const AdminAuditLazyRoute = AdminAuditLazyRouteImport.update({
+  id: "/audit",
+  path: "/audit",
+  getParentRoute: () => AdminRoute,
+} as any).lazy(() => import("./routes/admin/audit.lazy").then((d) => d.Route));
 
 export interface FileRoutesByFullPath {
   "/": typeof IndexLazyRoute;
+  "/admin": typeof AdminRouteWithChildren;
   "/about": typeof AboutLazyRoute;
   "/login": typeof LoginLazyRoute;
   "/notes": typeof NotesLazyRoute;
   "/signup": typeof SignupLazyRoute;
+  "/admin/audit": typeof AdminAuditLazyRoute;
+  "/admin/backup": typeof AdminBackupLazyRoute;
+  "/admin/settings": typeof AdminSettingsLazyRoute;
+  "/admin/users": typeof AdminUsersLazyRoute;
+  "/admin/": typeof AdminIndexLazyRoute;
 }
 export interface FileRoutesByTo {
   "/": typeof IndexLazyRoute;
@@ -57,25 +101,70 @@ export interface FileRoutesByTo {
   "/login": typeof LoginLazyRoute;
   "/notes": typeof NotesLazyRoute;
   "/signup": typeof SignupLazyRoute;
+  "/admin/audit": typeof AdminAuditLazyRoute;
+  "/admin/backup": typeof AdminBackupLazyRoute;
+  "/admin/settings": typeof AdminSettingsLazyRoute;
+  "/admin/users": typeof AdminUsersLazyRoute;
+  "/admin": typeof AdminIndexLazyRoute;
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport;
   "/": typeof IndexLazyRoute;
+  "/admin": typeof AdminRouteWithChildren;
   "/about": typeof AboutLazyRoute;
   "/login": typeof LoginLazyRoute;
   "/notes": typeof NotesLazyRoute;
   "/signup": typeof SignupLazyRoute;
+  "/admin/audit": typeof AdminAuditLazyRoute;
+  "/admin/backup": typeof AdminBackupLazyRoute;
+  "/admin/settings": typeof AdminSettingsLazyRoute;
+  "/admin/users": typeof AdminUsersLazyRoute;
+  "/admin/": typeof AdminIndexLazyRoute;
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath;
-  fullPaths: "/" | "/about" | "/login" | "/notes" | "/signup";
+  fullPaths:
+    | "/"
+    | "/admin"
+    | "/about"
+    | "/login"
+    | "/notes"
+    | "/signup"
+    | "/admin/audit"
+    | "/admin/backup"
+    | "/admin/settings"
+    | "/admin/users"
+    | "/admin/";
   fileRoutesByTo: FileRoutesByTo;
-  to: "/" | "/about" | "/login" | "/notes" | "/signup";
-  id: "__root__" | "/" | "/about" | "/login" | "/notes" | "/signup";
+  to:
+    | "/"
+    | "/about"
+    | "/login"
+    | "/notes"
+    | "/signup"
+    | "/admin/audit"
+    | "/admin/backup"
+    | "/admin/settings"
+    | "/admin/users"
+    | "/admin";
+  id:
+    | "__root__"
+    | "/"
+    | "/admin"
+    | "/about"
+    | "/login"
+    | "/notes"
+    | "/signup"
+    | "/admin/audit"
+    | "/admin/backup"
+    | "/admin/settings"
+    | "/admin/users"
+    | "/admin/";
   fileRoutesById: FileRoutesById;
 }
 export interface RootRouteChildren {
   IndexLazyRoute: typeof IndexLazyRoute;
+  AdminRoute: typeof AdminRouteWithChildren;
   AboutLazyRoute: typeof AboutLazyRoute;
   LoginLazyRoute: typeof LoginLazyRoute;
   NotesLazyRoute: typeof NotesLazyRoute;
@@ -112,6 +201,13 @@ declare module "@tanstack/react-router" {
       preLoaderRoute: typeof AboutLazyRouteImport;
       parentRoute: typeof rootRouteImport;
     };
+    "/admin": {
+      id: "/admin";
+      path: "/admin";
+      fullPath: "/admin";
+      preLoaderRoute: typeof AdminRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
     "/": {
       id: "/";
       path: "/";
@@ -119,11 +215,65 @@ declare module "@tanstack/react-router" {
       preLoaderRoute: typeof IndexLazyRouteImport;
       parentRoute: typeof rootRouteImport;
     };
+    "/admin/": {
+      id: "/admin/";
+      path: "/";
+      fullPath: "/admin/";
+      preLoaderRoute: typeof AdminIndexLazyRouteImport;
+      parentRoute: typeof AdminRoute;
+    };
+    "/admin/users": {
+      id: "/admin/users";
+      path: "/users";
+      fullPath: "/admin/users";
+      preLoaderRoute: typeof AdminUsersLazyRouteImport;
+      parentRoute: typeof AdminRoute;
+    };
+    "/admin/settings": {
+      id: "/admin/settings";
+      path: "/settings";
+      fullPath: "/admin/settings";
+      preLoaderRoute: typeof AdminSettingsLazyRouteImport;
+      parentRoute: typeof AdminRoute;
+    };
+    "/admin/backup": {
+      id: "/admin/backup";
+      path: "/backup";
+      fullPath: "/admin/backup";
+      preLoaderRoute: typeof AdminBackupLazyRouteImport;
+      parentRoute: typeof AdminRoute;
+    };
+    "/admin/audit": {
+      id: "/admin/audit";
+      path: "/audit";
+      fullPath: "/admin/audit";
+      preLoaderRoute: typeof AdminAuditLazyRouteImport;
+      parentRoute: typeof AdminRoute;
+    };
   }
 }
 
+interface AdminRouteChildren {
+  AdminAuditLazyRoute: typeof AdminAuditLazyRoute;
+  AdminBackupLazyRoute: typeof AdminBackupLazyRoute;
+  AdminSettingsLazyRoute: typeof AdminSettingsLazyRoute;
+  AdminUsersLazyRoute: typeof AdminUsersLazyRoute;
+  AdminIndexLazyRoute: typeof AdminIndexLazyRoute;
+}
+
+const AdminRouteChildren: AdminRouteChildren = {
+  AdminAuditLazyRoute: AdminAuditLazyRoute,
+  AdminBackupLazyRoute: AdminBackupLazyRoute,
+  AdminSettingsLazyRoute: AdminSettingsLazyRoute,
+  AdminUsersLazyRoute: AdminUsersLazyRoute,
+  AdminIndexLazyRoute: AdminIndexLazyRoute,
+};
+
+const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren);
+
 const rootRouteChildren: RootRouteChildren = {
   IndexLazyRoute: IndexLazyRoute,
+  AdminRoute: AdminRouteWithChildren,
   AboutLazyRoute: AboutLazyRoute,
   LoginLazyRoute: LoginLazyRoute,
   NotesLazyRoute: NotesLazyRoute,
