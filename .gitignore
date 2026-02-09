@@ -142,6 +142,9 @@ vite.config.ts.timestamp-*
 
 # SQLite
 *.db
+*.db-shm
+*.db-wal
+*.db-journal
 *.sqlite
 
 # Drizzle (root-level only; api/drizzle/ migrations are tracked)
