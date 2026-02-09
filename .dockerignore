@@ -1,0 +1,10 @@
+node_modules
+.git
+*.db
+*.sqlite
+dist
+.husky
+.cache
+.DS_Store
+*.log
+charts

@@ -1,0 +1,20 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1770669639268,
+      "tag": "0000_married_stryfe",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1770675578326,
+      "tag": "0001_parallel_dark_beast",
+      "breakpoints": true
+    }
+  ]
+}

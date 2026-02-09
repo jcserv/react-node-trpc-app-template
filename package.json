@@ -1,0 +1,20 @@
+{
+  "name": "react-node-trpc-app-template",
+  "private": true,
+  "scripts": {
+    "dev": "pnpm --filter @app/api dev & pnpm --filter @app/ui dev",
+    "dev:api": "pnpm --filter @app/api dev",
+    "dev:ui": "pnpm --filter @app/ui dev",
+    "build": "pnpm --filter @app/api build && pnpm --filter @app/ui build",
+    "lint": "pnpm --filter @app/api lint && pnpm --filter @app/ui lint",
+    "db:generate": "pnpm --filter @app/api run db:generate",
+    "db:migrate": "pnpm --filter @app/api run db:migrate",
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "husky": "^9.1.7"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": ["better-sqlite3", "esbuild"]
+  }
+}

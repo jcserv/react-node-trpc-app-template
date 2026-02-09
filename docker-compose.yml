@@ -1,0 +1,18 @@
+services:
+  app:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET:-change-me-to-a-random-32-char-secret}
+    volumes:
+      - app-data:/data
+    user: "1000:1000"
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+
+volumes:
+  app-data:

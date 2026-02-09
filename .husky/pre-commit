@@ -1,0 +1,1 @@
+pnpm --filter @app/ui test:types && pnpm --filter @app/ui test:unit && pnpm --filter @app/ui lint
