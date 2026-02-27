@@ -51,8 +51,27 @@ function AdminLayout() {
   }
 
   return (
-    <div className="flex min-h-[calc(100vh-8rem)]">
-      <aside className="w-56 border-r p-4 space-y-1">
+    <div className="flex flex-col md:flex-row min-h-[calc(100vh-8rem)]">
+      {/* Mobile: horizontal nav */}
+      <div className="flex md:hidden overflow-x-auto border-b px-4 py-2 gap-1">
+        {navItems.map((item) => {
+          const isActive = location.pathname.startsWith(item.to);
+          return (
+            <Link key={item.to} to={item.to}>
+              <Button
+                variant={isActive ? "secondary" : "ghost"}
+                className="gap-1.5 shrink-0"
+                size="sm"
+              >
+                <item.icon className="h-4 w-4" />
+                {item.label}
+              </Button>
+            </Link>
+          );
+        })}
+      </div>
+      {/* Desktop: sidebar */}
+      <aside className="hidden md:block w-56 border-r p-4 space-y-1">
         <div className="flex items-center gap-2 mb-4 px-2">
           <Shield className="h-5 w-5" />
           <span className="font-semibold">Admin</span>
@@ -73,7 +92,7 @@ function AdminLayout() {
           );
         })}
       </aside>
-      <div className="flex-1 p-6">
+      <div className="flex-1 p-4 md:p-6 min-w-0">
         <Outlet />
       </div>
     </div>

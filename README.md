@@ -40,7 +40,8 @@ A full-stack application template with end-to-end type safety, using React + Nod
 ## Getting Started
 
 ```bash
-pnpm install
+pnpm install --ignore-scripts
+cd node_modules/.pnpm/better-sqlite3@11.10.0/node_modules/better-sqlite3 && npm run build-release
 
 # Generate/run database migrations
 pnpm db:generate

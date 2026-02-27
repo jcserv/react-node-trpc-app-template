@@ -33,7 +33,7 @@ export function AdminAuditPage() {
     <div className="space-y-4">
       <h2 className="text-xl font-semibold">Audit Log</h2>
 
-      <div className="flex gap-2">
+      <div className="flex flex-col sm:flex-row gap-2">
         <Input
           placeholder="Filter by action..."
           value={actionFilter}
@@ -41,7 +41,7 @@ export function AdminAuditPage() {
             setActionFilter(e.target.value);
             setPage(0);
           }}
-          className="w-48"
+          className="w-full sm:w-48"
         />
         <Input
           placeholder="Filter by user ID..."
@@ -50,11 +50,11 @@ export function AdminAuditPage() {
             setUserIdFilter(e.target.value);
             setPage(0);
           }}
-          className="w-48"
+          className="w-full sm:w-48"
         />
       </div>
 
-      <div className="rounded-md border">
+      <div className="rounded-md border overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>

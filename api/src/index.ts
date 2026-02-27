@@ -13,6 +13,7 @@ import { fromNodeHeaders, toNodeHandler } from "better-auth/node";
 import fastify, { type FastifyError } from "fastify";
 
 import { auth } from "./auth.js";
+import { sqlite } from "./db/index.js";
 import { logAudit } from "./lib/audit.js";
 import { seedAdmin } from "./lib/seed-admin.js";
 import { type AppRouter, appRouter } from "./router/index.js";
@@ -167,6 +168,9 @@ server.get("/api/admin/backup", async (req, reply) => {
   if (!existsSync(dbPath)) {
     return reply.status(404).send({ error: "Database file not found" });
   }
+
+  // Flush WAL data into the main database file so the backup is complete
+  sqlite.pragma("wal_checkpoint(TRUNCATE)");
 
   const stat = statSync(dbPath);
   const filename = `backup-${new Date().toISOString().replace(/[:.]/g, "-")}.db`;
