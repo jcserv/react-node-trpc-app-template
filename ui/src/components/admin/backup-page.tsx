@@ -13,7 +13,7 @@ import {
 export function AdminBackupPage() {
   const [downloading, setDownloading] = useState(false);
 
-  const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000/trpc";
+  const apiUrl = import.meta.env.VITE_API_URL || "/trpc";
   const baseURL = apiUrl.replace(/\/trpc\/?$/, "");
 
   const handleDownload = async () => {

@@ -12,7 +12,7 @@ export function TRPCProvider({ children }: { children: React.ReactNode }) {
     trpc.createClient({
       links: [
         httpBatchLink({
-          url: import.meta.env.VITE_API_URL || "http://localhost:3000/trpc",
+          url: import.meta.env.VITE_API_URL || "/trpc",
           transformer: superjson,
           fetch(url, options) {
             return fetch(url, { ...options, credentials: "include" });
