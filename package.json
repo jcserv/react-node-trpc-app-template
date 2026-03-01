@@ -6,6 +6,7 @@
     "dev:api": "pnpm --filter @app/api dev",
     "dev:ui": "pnpm --filter @app/ui dev",
     "build": "pnpm --filter @app/api build && pnpm --filter @app/ui build",
+    "test": "pnpm --filter @app/ui test",
     "lint": "pnpm --filter @app/api lint && pnpm --filter @app/ui lint",
     "db:generate": "pnpm --filter @app/api run db:generate",
     "db:migrate": "pnpm --filter @app/api run db:migrate",
