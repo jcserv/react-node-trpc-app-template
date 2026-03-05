@@ -2,12 +2,15 @@ import { useRequireAuth } from "@/hooks/use-require-auth";
 import { trpc } from "@/lib/trpc";
 
 import { PageSkeleton } from "../skeletons";
-
 import { CreateNoteDialog } from "./create-note-dialog";
 import { NoteCard } from "./note-card";
 
 export function NotesPage() {
-  const { session, isPending: sessionLoading, isAuthenticated } = useRequireAuth();
+  const {
+    session,
+    isPending: sessionLoading,
+    isAuthenticated,
+  } = useRequireAuth();
 
   const { data: notes, isLoading } = trpc.notes.list.useQuery(undefined, {
     enabled: isAuthenticated,

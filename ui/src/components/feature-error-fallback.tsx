@@ -3,9 +3,7 @@ import type { ErrorComponentProps } from "@tanstack/react-router";
 export function FeatureErrorFallback({ error, reset }: ErrorComponentProps) {
   return (
     <div className="max-w-md w-full mx-auto px-6 py-12 text-center">
-      <h2 className="text-xl font-semibold mb-3">
-        Something went wrong
-      </h2>
+      <h2 className="text-xl font-semibold mb-3">Something went wrong</h2>
       <p className="text-muted-foreground mb-2">
         An unexpected error occurred. You can try again.
       </p>
