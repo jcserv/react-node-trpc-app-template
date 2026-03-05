@@ -48,9 +48,7 @@ export const Header: React.FC = () => {
     <header className="flex items-center justify-between m-4">
       <Link to="/" className="flex items-center gap-2 shrink-0">
         <StickyNote className="h-6 w-6" />
-        <h1 className="scroll-m-20 text-2xl font-bold tracking-tight">
-          Notes
-        </h1>
+        <h1 className="scroll-m-20 text-2xl font-bold tracking-tight">Notes</h1>
       </Link>
 
       {/* Desktop nav */}

@@ -15,7 +15,8 @@ export async function seedAdmin(): Promise<void> {
 
   if (admins.length > 0) return;
 
-  const email = process.env.ADMIN_EMAIL || "admin@example.com";
+  const { config } = await import("../config.js");
+  const email = config.ADMIN_EMAIL;
   const password = randomBytes(16).toString("hex");
 
   try {

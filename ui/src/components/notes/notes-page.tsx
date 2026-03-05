@@ -1,33 +1,20 @@
-import { useEffect } from "react";
-
-import { useNavigate } from "@tanstack/react-router";
-
-import { useSession } from "@/lib/auth-client";
+import { useRequireAuth } from "@/hooks/use-require-auth";
 import { trpc } from "@/lib/trpc";
+
+import { PageSkeleton } from "../skeletons";
 
 import { CreateNoteDialog } from "./create-note-dialog";
 import { NoteCard } from "./note-card";
 
 export function NotesPage() {
-  const { data: session, isPending: sessionLoading } = useSession();
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    if (!sessionLoading && !session?.user) {
-      navigate({ to: "/login" });
-    }
-  }, [session, sessionLoading, navigate]);
+  const { session, isPending: sessionLoading, isAuthenticated } = useRequireAuth();
 
   const { data: notes, isLoading } = trpc.notes.list.useQuery(undefined, {
-    enabled: !!session?.user,
+    enabled: isAuthenticated,
   });
 
   if (sessionLoading) {
-    return (
-      <section className="p-6 max-w-4xl mx-auto">
-        <p className="text-muted-foreground text-center py-12">Loading...</p>
-      </section>
-    );
+    return <PageSkeleton />;
   }
 
   if (!session?.user) {
@@ -41,11 +28,7 @@ export function NotesPage() {
         <CreateNoteDialog />
       </div>
 
-      {isLoading && (
-        <p className="text-muted-foreground text-center py-12">
-          Loading notes...
-        </p>
-      )}
+      {isLoading && <PageSkeleton />}
 
       {!isLoading && notes?.length === 0 && (
         <p className="text-muted-foreground text-center py-12">

@@ -4,7 +4,9 @@ import { fromNodeHeaders } from "better-auth/node";
 import superjson from "superjson";
 
 import { auth } from "./auth.js";
+import { config } from "./config.js";
 import { logAudit } from "./lib/audit.js";
+import { formatTRPCError } from "./lib/format-error.js";
 
 export async function createContext({ req, res }: CreateFastifyContextOptions) {
   const session = await auth.api.getSession({
@@ -20,16 +22,17 @@ export async function createContext({ req, res }: CreateFastifyContextOptions) {
 
 export type Context = Awaited<ReturnType<typeof createContext>>;
 
-const isDev = process.env.NODE_ENV !== "production";
+const isDev = config.NODE_ENV !== "production";
 
 const t = initTRPC.context<Context>().create({
   transformer: superjson,
-  errorFormatter({ shape }) {
+  errorFormatter({ shape, error }) {
     return {
       ...shape,
       data: {
         ...shape.data,
         stack: isDev ? shape.data.stack : undefined,
+        formatted: formatTRPCError(error),
       },
     };
   },
@@ -55,8 +58,8 @@ export const protectedProcedure = t.procedure.use(
       },
     });
 
-    // Audit log mutations
-    if (type === "mutation") {
+    // Audit log only successful mutations
+    if (type === "mutation" && result.ok) {
       logAudit({
         userId: ctx.user.id,
         action: `trpc:${path}`,
@@ -70,8 +73,7 @@ export const protectedProcedure = t.procedure.use(
 );
 
 export const adminProcedure = protectedProcedure.use(async ({ ctx, next }) => {
-  const role = (ctx.user as Record<string, unknown>).role as string | undefined;
-  if (role !== "admin") {
+  if (ctx.user.role !== "admin") {
     throw new TRPCError({
       code: "FORBIDDEN",
       message: "Admin access required",

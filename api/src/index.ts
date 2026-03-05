@@ -1,4 +1,5 @@
 import { createReadStream, existsSync, statSync } from "node:fs";
+import type { ServerResponse } from "node:http";
 import path from "node:path";
 
 import cors from "@fastify/cors";
@@ -9,19 +10,29 @@ import {
   fastifyTRPCPlugin,
   type FastifyTRPCPluginOptions,
 } from "@trpc/server/adapters/fastify";
-import { fromNodeHeaders, toNodeHandler } from "better-auth/node";
+import { toNodeHandler } from "better-auth/node";
 import fastify, { type FastifyError } from "fastify";
 
 import { auth } from "./auth.js";
-import { sqlite } from "./db/index.js";
+import { config } from "./config.js";
+import { databaseAdapter } from "./db/index.js";
 import { logAudit } from "./lib/audit.js";
+import { getAdminSession } from "./lib/require-admin.js";
 import { seedAdmin } from "./lib/seed-admin.js";
 import { type AppRouter, appRouter } from "./router/index.js";
 import { createContext } from "./trpc.js";
 
 const server = fastify({ logger: true });
 
-const isDev = process.env.NODE_ENV !== "production";
+const isDev = config.NODE_ENV !== "production";
+
+/** Sets CORS headers on a raw Node response (used in hijacked auth routes). */
+function setCorsHeaders(res: ServerResponse, origin: string): void {
+  res.setHeader("Access-Control-Allow-Origin", origin);
+  res.setHeader("Access-Control-Allow-Credentials", "true");
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+}
 
 // Sanitize error responses — never leak stack traces in production
 server.setErrorHandler((error: FastifyError, _req, reply) => {
@@ -50,7 +61,7 @@ await server.register(helmet, {
 });
 
 // 2. CORS — set CORS_ORIGIN=false in production (same-origin, no CORS needed)
-const corsOrigin = process.env.CORS_ORIGIN ?? "http://localhost:5173";
+const corsOrigin = config.CORS_ORIGIN;
 if (corsOrigin !== "false") {
   await server.register(cors, {
     origin: corsOrigin,
@@ -81,16 +92,7 @@ await server.register(async (instance) => {
       // reply.hijack() bypasses Fastify's response pipeline, so @fastify/cors
       // headers never get written. Set them on the raw response manually.
       if (corsOrigin !== "false") {
-        reply.raw.setHeader("Access-Control-Allow-Origin", corsOrigin);
-        reply.raw.setHeader("Access-Control-Allow-Credentials", "true");
-        reply.raw.setHeader(
-          "Access-Control-Allow-Methods",
-          "GET, POST, PUT, DELETE, OPTIONS",
-        );
-        reply.raw.setHeader(
-          "Access-Control-Allow-Headers",
-          "Content-Type, Authorization",
-        );
+        setCorsHeaders(reply.raw, corsOrigin);
 
         if (req.method === "OPTIONS") {
           reply.raw.statusCode = 204;
@@ -149,28 +151,19 @@ server.get("/health", async () => {
 
 // 7. Admin backup endpoint — streams SQLite DB file
 server.get("/api/admin/backup", async (req, reply) => {
-  const session = await auth.api.getSession({
-    headers: fromNodeHeaders(req.raw.headers),
-  });
+  const session = await getAdminSession(req.raw.headers);
 
-  if (!session?.user) {
-    return reply.status(401).send({ error: "Not authenticated" });
-  }
-
-  const role = (session.user as Record<string, unknown>).role as
-    | string
-    | undefined;
-  if (role !== "admin") {
+  if (!session) {
     return reply.status(403).send({ error: "Admin access required" });
   }
 
-  const dbPath = path.resolve(process.env.DATABASE_PATH || "sqlite.db");
+  const dbPath = path.resolve(config.DATABASE_PATH);
   if (!existsSync(dbPath)) {
     return reply.status(404).send({ error: "Database file not found" });
   }
 
   // Flush WAL data into the main database file so the backup is complete
-  sqlite.pragma("wal_checkpoint(TRUNCATE)");
+  databaseAdapter.checkpoint();
 
   const stat = statSync(dbPath);
   const filename = `backup-${new Date().toISOString().replace(/[:.]/g, "-")}.db`;
@@ -183,7 +176,7 @@ server.get("/api/admin/backup", async (req, reply) => {
 });
 
 // 8. Static file serving — serve built UI assets in production
-const uiDistPath = path.resolve(process.env.UI_DIST_PATH || "./ui/dist");
+const uiDistPath = path.resolve(config.UI_DIST_PATH);
 if (existsSync(uiDistPath)) {
   await server.register(fastifyStatic, {
     root: uiDistPath,
@@ -199,7 +192,7 @@ if (existsSync(uiDistPath)) {
 // Seed admin user on first startup
 await seedAdmin();
 
-const port = Number(process.env.PORT) || 3000;
+const port = config.PORT;
 
 try {
   await server.listen({ port, host: "0.0.0.0" });

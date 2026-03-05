@@ -1,11 +1,14 @@
-import Database, { type Database as DatabaseType } from "better-sqlite3";
-import { drizzle } from "drizzle-orm/better-sqlite3";
+import type { BetterSQLite3Database } from "drizzle-orm/better-sqlite3";
 
-import * as schema from "./schema.js";
+import { config } from "../config.js";
 
-const dbPath = process.env.DATABASE_PATH || "sqlite.db";
-const sqlite: DatabaseType = new Database(dbPath);
-sqlite.pragma("journal_mode = WAL");
+import type { DatabaseAdapter } from "./adapter.js";
+import type * as schema from "./schema.js";
 
-export const db = drizzle(sqlite, { schema });
-export { sqlite };
+const dbPath = config.DATABASE_PATH;
+
+const { createSqliteAdapter } = await import("./sqlite/driver.js");
+const databaseAdapter: DatabaseAdapter = createSqliteAdapter(dbPath);
+const db: BetterSQLite3Database<typeof schema> = databaseAdapter.db;
+
+export { databaseAdapter, db };
